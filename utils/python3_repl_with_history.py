@@ -16,14 +16,28 @@ console = code.InteractiveConsole(globals())
 # Function to save input/output to the temporary file during REPL session
 
 
+def get_multiline_input():
+    lines = []
+    prompt = ">>> "
+    while True:
+        line = input(prompt)
+        lines.append(line)
+        if line.endswith(":"):
+            prompt = "... "
+        elif len(lines) > 1 and line.strip() == "":
+            break
+        elif len(lines) == 1:
+            break
+    return "\n".join(lines)
+
+
 def save_input_output_temp(input_data, output_data):
     with open(tempfile, 'a') as f:
         # Save the input as it would be typed in the REPL (without '>>>')
         if input_data.strip() != "":  # Only save non-empty lines
             f.write(f"{input_data}\n")
-        else:
-            # Save empty lines as commented lines
-            f.write("#\n")
+
+        f.write("#\n")
 
         # Save the output as comments if it's not empty
         if output_data.strip():
@@ -46,6 +60,37 @@ def custom_exec_input(input_data):
     return output_data
 
 # Function to load a file into the REPL and execute its contents
+
+
+def load_file_to_repl_multiline(file_name):
+    if os.path.exists(file_name):
+        with open(file_name, 'r') as file:
+            buffer = []
+            in_multiline = False
+
+            for line in file:
+                line = line.strip()
+
+                if not in_multiline:
+                    buffer.append(line)
+                    in_multiline = line.endswith(":")
+                    if not in_multiline:
+                        custom_exec_input("\n".join(buffer))
+                        buffer = []
+                        continue
+                else:
+                    if line.startswith("#"):
+                        buffer.append("")
+                        in_multiline = False
+                        break
+                    else:
+                        buffer.append(f"\t{line}")
+                        continue
+
+            # Final flush if any buffer remains
+            if buffer:
+                custom_exec_input("\n".join(buffer))
+                buffer = []
 
 
 def load_file_to_repl(file_name):
@@ -83,11 +128,11 @@ def start_repl():
 
     # Load the previous session's input and execute it (but don't save during loading)
     if os.path.exists(histfile):
-        load_file_to_repl(histfile)
+        load_file_to_repl_multiline(histfile)
 
     while True:
         try:
-            user_input = input(">>> ")
+            user_input = get_multiline_input()
             if user_input.lower() in ['exit', 'quit']:
                 break
             output_data = custom_exec_input(user_input)
