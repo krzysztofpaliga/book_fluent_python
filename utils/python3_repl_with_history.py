@@ -18,8 +18,9 @@ def save_input_output(input_data, output_data):
 
         # Save the output if it's not empty (as Python code format, as comments)
         if output_data.strip():  # If output is not empty
-            f.write(f"# {output_data}\n")  # Mark output as a Python comment
-            f.write('#' * 40 + '\n')  # Separator as comment (to avoid syntax errors)
+            # Split the output by lines and write each line with a comment marker
+            for line in output_data.splitlines():
+                f.write(f"# {line}\n")  # Mark output as a Python comment
 
 # Custom function to capture the output of the REPL
 def custom_exec_input(input_data):
@@ -40,6 +41,16 @@ def custom_exec_input(input_data):
     # Restore the original stdout
     sys.stdout = original_stdout
     return output_data
+
+# Function to load a file into the REPL and save it to history
+def load_file_to_repl(file_name):
+    if os.path.exists(file_name):
+        with open(file_name, 'r') as file:
+            for line in file:
+                # Save the input (file contents) to history
+                save_input_output(line.strip(), "")
+                # Execute each line in the REPL
+                custom_exec_input(line.strip())
 
 # Function to start REPL loop
 def start_repl():
