@@ -69,7 +69,7 @@ def load_file_to_repl_multiline(file_name):
             in_multiline = False
 
             for line in file:
-                line = line.strip()
+                line = line.rstrip()
 
                 if not in_multiline:
                     buffer.append(line)
@@ -84,7 +84,7 @@ def load_file_to_repl_multiline(file_name):
                         in_multiline = False
                         break
                     else:
-                        buffer.append(f"\t{line}")
+                        buffer.append(f"{line}")
                         continue
 
             # Final flush if any buffer remains
